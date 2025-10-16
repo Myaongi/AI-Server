@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual Environments
+venv/
+env/
+ENV/
+fastapi_env/
+new_venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment variables
+.env
+.env.local
+
+# Config with sensitive data (GitHub Actions will generate this)
+app/domain/config.py
+
+# Logs
+*.log
+
+# Model weights (optional - uncomment if you don't want to track them)
+# *.pt
+# *.pth
+
+# Temporary files
+*.tmp
+*.bak
+
+# Hugging Face cache (로컬 개발용 - Docker에서는 이미지에 포함)
+.cache/
+
+# Troubleshooting 문서는 추적하지만, 로컬 수정사항은 제외
+TROUBLESHOOTING_CLIP_CACHE.md

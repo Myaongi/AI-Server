@@ -1,0 +1,37 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pytest_cache/
+*.DS_Store
+
+# Virtual envs
+venv/
+new_venv/
+fastapi_env/
+.env
+.env.local
+
+# Git
+.git
+.gitignore
+
+# Editor settings
+.vscode/
+.idea/
+
+# Python caches
+**/.mypy_cache/
+**/.ruff_cache/
+**/.pytest_cache/
+
+# CI
+.github/
+
+# Not needed datasets or notebooks
+**/*.ipynb
+# Keep yolov8s.pt (needed at runtime)
+# data/
+
+
+

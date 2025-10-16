@@ -1,0 +1,15 @@
+numpy==2.2.6
+pillow==11.3.0
+timm==1.0.20
+opencv-python-headless==4.10.0.84
+ultralytics==8.3.203
+pandas>=2.0.0
+
+fastapi>=0.111
+uvicorn[standard]>=0.30
+python-multipart>=0.0.9
+pydantic>=2.7
+
+# CLIP 및 LLM 관련
+open_clip_torch>=2.20.0
+requests>=2.31.0

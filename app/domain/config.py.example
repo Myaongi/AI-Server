@@ -1,0 +1,44 @@
+import os
+
+# ===== 설정 파일 템플릿 =====
+# 이 파일을 config.py로 복사하여 사용하세요.
+# GitHub Actions는 Secrets의 환경변수로 자동 생성합니다.
+
+# ===== Hugging Face 캐시 경로 (로컬 전용) =====
+# 로컬 개발 시 권한 문제 방지
+if "HF_HOME" not in os.environ:
+    # 홈 디렉토리의 .cache 사용
+    import pathlib
+    home_cache = pathlib.Path.home() / ".cache" / "huggingface"
+    os.environ["HF_HOME"] = str(home_cache)
+    os.environ["TRANSFORMERS_CACHE"] = str(home_cache)
+    os.environ["HF_DATASETS_CACHE"] = str(home_cache)
+
+# ===== LLM 정제화 =====
+GEMINI_API_URL = os.getenv("GEMINI_API_URL", "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "YOUR_GEMINI_API_KEY_HERE")  # ⚠️ 여기에 실제 API 키 입력
+LLM_TIMEOUT = float(os.getenv("LLM_TIMEOUT", "30"))
+LLM_MAX_RETRIES = int(os.getenv("LLM_MAX_RETRIES", "3"))
+GEMINI_TEMPERATURE = float(os.getenv("GEMINI_TEMPERATURE", "0.1"))
+
+# ===== YOLO 크롭 =====
+YOLO_WEIGHTS = os.getenv("YOLO_WEIGHTS", "yolov8s.pt")
+YOLO_CONF    = float(os.getenv("YOLO_CONF", "0.30"))
+YOLO_MARGIN  = float(os.getenv("YOLO_MARGIN", "0.18"))
+YOLO_IMGSZ   = int(os.getenv("YOLO_IMGSZ", "512"))
+DOG_CLASS_ID = int(os.getenv("DOG_CLASS_ID", "16"))  # COCO dog
+
+# ===== CLIP =====
+CLIP_MODEL      = os.getenv("CLIP_MODEL", "ViT-B-32")
+CLIP_PRETRAINED = os.getenv("CLIP_PRETRAINED", "laion2b_s34b_b79k")
+TEXT_POOLING    = os.getenv("TEXT_POOLING", "avg")  # avg|max|top1
+
+# ===== 유사도 가중치 (w_ii, w_it, w_ti, w_tt) =====
+W_II = float(os.getenv("W_II", "0.20"))
+W_IT = float(os.getenv("W_IT", "0.00"))
+W_TI = float(os.getenv("W_TI", "0.00"))
+W_TT = float(os.getenv("W_TT", "0.80"))
+
+# 노출 임계값: 매칭 기준선
+SIM_THRESHOLD = float(os.getenv("SIM_THRESHOLD", "0.35"))
+

@@ -307,6 +307,36 @@ docker run -d -p 8000:8000 \
 - Hugging Face 모델은 `/app/.cache/huggingface`에 다운로드됩니다
 - 비루트 사용자(`appuser`, UID 10001)로 실행되므로 권한 문제가 없습니다
 
+## ☁️ GCP VM 자동 배포
+
+이 프로젝트는 GitHub Actions를 통해 GCP VM에 자동으로 배포할 수 있습니다.
+
+### 배포 설정
+
+1. **Docker Hub 계정 준비**: Docker Hub 계정 및 Access Token 생성
+2. **GCP VM 생성**: GCP Compute Engine에서 VM 인스턴스 생성
+3. **SSH 키 설정**: VM 접속용 SSH 키 생성 및 등록
+4. **GitHub Secrets 추가**: Repository Settings에서 필요한 secrets 추가
+   - `DOCKERHUB_USERNAME`: Docker Hub 사용자 이름
+   - `DOCKERHUB_TOKEN`: Docker Hub Access Token
+   - `SSH_PRIVATE_KEY`: VM 접속용 SSH Private 키
+   - `VM_HOST`: VM의 외부 IP 주소
+   - `VM_USER`: VM 사용자 이름 (예: `ubuntu`)
+   - `GEMINI_API_KEY`: Gemini API 키
+   - `CONFIG_PY`: `app/domain/config.py` 파일의 전체 내용
+
+5. **자동 배포**: `develop` 브랜치에 push하면 자동으로 배포
+
+자세한 설정 방법은 [GCP 배포 가이드](.github/GCP_DEPLOYMENT_GUIDE.md)를 참고하세요.
+
+### 배포 워크플로우
+
+- `config.py` 파일 생성 (GitHub Secret에서)
+- Docker 이미지 빌드
+- Docker Hub에 푸시
+- SSH 키 설정
+- VM에 SSH 접속하여 컨테이너 재시작
+
 ## 📝 사용 예시
 
 ### 강아지 매칭 워크플로우

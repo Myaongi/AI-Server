@@ -49,7 +49,9 @@ jobs:
 
       - name: Create config.py
         run: |
-          echo "${{ secrets.CONFIG_PY }}" > app/domain/config.py
+          cat > app/domain/config.py << 'EOF'
+          ${{ secrets.CONFIG_PY }}
+          EOF
           ls -la yolov8s.pt
           echo "config.py created from GitHub Secret"
 

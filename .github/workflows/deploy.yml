@@ -14,10 +14,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Get Git short SHA
+        id: vars
+        run: echo "sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
       - name: Create config.py
         run: |
           echo "${{ secrets.CONFIG_PY }}" > app/domain/config.py
+          ls -la yolov8s.pt
           echo "config.py created from GitHub Secret"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Login to Docker Hub
         uses: docker/login-action@v3
@@ -25,13 +33,18 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build Docker image
-        run: |
-          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/gangajikimi-ai:latest .
-
-      - name: Push Docker image to Docker Hub
-        run: |
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/gangajikimi-ai:latest
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/gangajikimi-ai:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/gangajikimi-ai:${{ steps.vars.outputs.sha }}
+          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/gangajikimi-ai:buildcache
+          cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/gangajikimi-ai:buildcache,mode=max
+          build-args: |
+            BUILDKIT_INLINE_CACHE=1
 
       - name: Deploy to VM
         uses: appleboy/ssh-action@v1.0.0
@@ -40,6 +53,15 @@ jobs:
           username: ${{ secrets.VM_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
+            # 디스크 공간 정리 (용량 최적화)
+            docker system df
+            
+            # 사용하지 않는 이미지만 안전하게 정리
+            docker image prune -af
+            docker container prune -f
+            
+            docker system df
+            
             # 기존 컨테이너 중지 및 제거 (있을 경우)
             docker stop gangajikimi-api || true
             docker rm gangajikimi-api || true
@@ -53,3 +75,6 @@ jobs:
               --restart unless-stopped \
               -p 8000:8000 \
               ${{ secrets.DOCKERHUB_USERNAME }}/gangajikimi-ai:latest
+            
+            echo "=== 배포 완료 ==="
+            docker ps | grep gangajikimi-api

@@ -1,9 +1,10 @@
 # Gangajikimi FastAPI 서버용 멀티 스테이지, CPU 전용, 최소 런타임 이미지
+
 # 1단계: 휠 파일들을 미리 다운로드해서 최종 이미지에 빌드 도구 없이 최소 레이어로 구성
 ARG PYTHON_VERSION=3.13
 FROM python:${PYTHON_VERSION}-slim AS wheels
 
-# Python 환경 변수 설정 (캐시 비활성화, 바이트코드 생성 안함, 버퍼링 없음)
+# Python 환경 변수 설정
 ENV PIP_DISABLE_PIP_VERSION_CHECK=1 \
     PIP_NO_CACHE_DIR=1 \
     PYTHONDONTWRITEBYTECODE=1 \
@@ -24,25 +25,13 @@ RUN python -m pip install --upgrade pip && \
 # 2단계: 실제 런타임 이미지 (최종 배포용)
 FROM python:3.13-slim AS runtime
 
-# Python 환경 변수 설정
+# Python 빌드 환경 변수 설정 (빌드 시점에만 필요)
 ENV PIP_DISABLE_PIP_VERSION_CHECK=1 \
     PIP_NO_CACHE_DIR=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    UVICORN_WORKERS=2 \
-    HOST=0.0.0.0 \
-    PORT=8000 \
-    # Gemini API 설정 (배포 시 환경변수로 덮어쓰기)
-    GEMINI_API_KEY="" \
-    GEMINI_API_URL="https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent" \
-    # 모델 설정
-    YOLO_WEIGHTS="yolov8s.pt" \
-    CLIP_MODEL="ViT-B-32" \
-    CLIP_PRETRAINED="laion2b_s34b_b79k" \
-    # Hugging Face 캐시 경로 설정 (권한 문제 방지)
-    HF_HOME="/app/.cache/huggingface" \
-    TRANSFORMERS_CACHE="/app/.cache/huggingface" \
-    HF_DATASETS_CACHE="/app/.cache/huggingface"
+    PYTHONUNBUFFERED=1
+
+# 런타임 환경 변수는 app/domain/config.py에서 관리
 
 WORKDIR /app
 
@@ -65,24 +54,40 @@ RUN apt-get update && \
 COPY --from=wheels /wheels /tmp/wheels
 RUN python -m pip install --no-index --find-links=/tmp/wheels /tmp/wheels/* && \
     rm -rf /tmp/wheels && \
-    # PyTorch 관련 불필요한 패키지 제거
+    # ⭐ 불필요한 파일 제거로 이미지 크기 대폭 축소 (50-150MB 절감)
+    find /usr/local/lib/python*/site-packages -type d -name "tests" -exec rm -rf {} + 2>/dev/null || true && \
+    find /usr/local/lib/python*/site-packages -type d -name "test" -exec rm -rf {} + 2>/dev/null || true && \
+    find /usr/local/lib/python*/site-packages -type d -name "examples" -exec rm -rf {} + 2>/dev/null || true && \
+    find /usr/local/lib/python*/site-packages -type d -name "docs" -exec rm -rf {} + 2>/dev/null || true && \
     find /usr/local/lib/python*/site-packages -name "*.pyc" -delete && \
-    find /usr/local/lib/python*/site-packages -name "__pycache__" -type d -exec rm -rf {} + || true
+    find /usr/local/lib/python*/site-packages -name "*.pyo" -delete && \
+    find /usr/local/lib/python*/site-packages -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true && \
+    # PyTorch 불필요한 파일 제거
+    find /usr/local/lib/python*/site-packages/torch -name "*.a" -delete 2>/dev/null || true && \
+    # Ultralytics 불필요한 assets, datasets 제거
+    rm -rf /usr/local/lib/python*/site-packages/ultralytics/assets/*.jpg 2>/dev/null || true && \
+    rm -rf /usr/local/lib/python*/site-packages/ultralytics/cfg/datasets/*.yaml 2>/dev/null || true && \
+    # Locale 데이터 최소화 (영어, 한국어만 유지)
+    find /usr/share/locale -mindepth 1 -maxdepth 1 ! -name 'en*' ! -name 'ko*' ! -name 'locale.alias' -exec rm -rf {} + 2>/dev/null || true && \
+    # Man pages 제거
+    rm -rf /usr/share/man/* 2>/dev/null || true && \
+    # Doc 제거
+    rm -rf /usr/share/doc/* 2>/dev/null || true
 
 # 필요한 프로젝트 파일들만 복사
 COPY app/ /app/app/
 COPY yolov8s.pt /app/yolov8s.pt
 
-# Hugging Face 캐시 디렉토리 생성
-RUN mkdir -p /app/.cache/huggingface
+# 보안을 위해 비루트 사용자 생성 (CLIP 다운로드 전에 생성)
+RUN useradd -m -u 10001 appuser && \
+    mkdir -p /app/.cache/huggingface && \
+    chown -R appuser:appuser /app
 
-# ⭐ CLIP 모델 사전 다운로드 (빌드 시 한 번만)
-RUN python -c "import open_clip; open_clip.create_model_and_transforms('ViT-B-32', pretrained='laion2b_s34b_b79k')" && \
+# CLIP 모델 사전 다운로드 (BuildKit 캐시 마운트로 속도 향상)
+RUN --mount=type=cache,target=/app/.cache/huggingface,uid=10001,gid=10001 \
+    python -c "import open_clip; open_clip.create_model_and_transforms('ViT-B-32', pretrained='laion2b_s34b_b79k')" && \
     echo "CLIP model downloaded and cached"
 
-# 보안을 위해 비루트 사용자 생성 및 권한 설정
-RUN useradd -m -u 10001 appuser && \
-    chown -R appuser:appuser /app
 USER appuser
 
 # 포트 8000 노출
@@ -93,5 +98,4 @@ HEALTHCHECK --interval=180s --timeout=5s --retries=3 CMD python -c "import urlli
 
 # 프로덕션용 기본 명령어 (reload 비활성화). 필요시 CMD/args로 변경 가능
 CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
-
 

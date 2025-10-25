@@ -15,23 +15,64 @@ fastapi_env/
 # Git
 .git
 .gitignore
+.gitattributes
 
 # Editor settings
 .vscode/
 .idea/
+*.swp
+*.swo
+*~
 
 # Python caches
 **/.mypy_cache/
 **/.ruff_cache/
 **/.pytest_cache/
 
-# CI
+# CI/CD
 .github/
+
+# Documentation (빌드 컨텍스트 최소화)
+*.md
+README*
+LICENSE
+CHANGELOG*
+CONTRIBUTING*
+CODE_OF_CONDUCT*
+TROUBLESHOOTING*
+Dockerfile.v*
 
 # Not needed datasets or notebooks
 **/*.ipynb
+**/*.csv
 # Keep yolov8s.pt (needed at runtime)
 # data/
+
+# Test files (빌드 컨텍스트 최소화)
+tests/
+test/
+*_test.py
+test_*.py
+**/__tests__/
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+.tox/
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
 
 
 

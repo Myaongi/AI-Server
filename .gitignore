@@ -29,6 +29,7 @@ Thumbs.db
 
 # Config with sensitive data (GitHub Actions will generate this)
 app/domain/config.py
+app/domain/config.py.example
 
 # Logs
 *.log
@@ -48,4 +49,5 @@ app/domain/config.py
 TROUBLESHOOTING_CLIP_CACHE.md
 
 # Deployment guides
-.github/GCP_DEPLOYMENT_GUIDE.md
+GCP_DEPLOYMENT_GUIDE.md
+BUILD_OPTIMIZATION.md

@@ -19,14 +19,23 @@ jobs:
           echo "=== 디스크 정리 전 상태 ==="
           df -h
           
-          # 불필요한 대용량 패키지 제거 (약 10GB 확보)
+          # 불필요한 대용량 패키지 제거 (약 12-14GB 확보)
           sudo rm -rf /usr/share/dotnet
           sudo rm -rf /usr/local/lib/android
           sudo rm -rf /opt/ghc
           sudo rm -rf /opt/hostedtoolcache/CodeQL
+          sudo rm -rf /usr/local/share/boost
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+          
+          # 추가 정리
+          sudo apt-get remove -y '^aspnetcore-.*' || true
+          sudo apt-get remove -y '^dotnet-.*' --fix-missing || true
+          sudo apt-get remove -y '^llvm-.*' --fix-missing || true
+          sudo apt-get remove -y 'php.*' --fix-missing || true
+          sudo apt-get autoremove -y
           
           # Docker 캐시 정리
-          docker system prune -af
+          docker system prune -af --volumes
           
           # APT 캐시 정리
           sudo apt-get clean

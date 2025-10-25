@@ -47,6 +47,7 @@ app/domain/config.py.example
 
 # Troubleshooting 문서는 추적하지만, 로컬 수정사항은 제외
 TROUBLESHOOTING_CLIP_CACHE.md
+SSH_TROUBLESHOOTING.md
 
 # Deployment guides
 GCP_DEPLOYMENT_GUIDE.md

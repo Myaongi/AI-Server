@@ -32,8 +32,8 @@ async def get_dogbreed_result(
         
         logger.info(f"강아지 품종 분석 완료: {breed_text}")
         
-        # 단순 텍스트 반환
-        return {"result": breed_text}
+        # DogBreedResult 스키마 객체로 반환 (Java DogBreedResponse와 매핑)
+        return schema.DogBreedResult(result=breed_text)
         
     except HTTPException as e:
         logger.error(f"HTTP 에러: {e.detail}")

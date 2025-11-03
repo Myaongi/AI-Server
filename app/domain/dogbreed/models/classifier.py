@@ -124,7 +124,8 @@ def load_classifier(
 
     # 2) 모델 생성 & 가중치 로드
     model = timm.create_model(model_name, pretrained=False, num_classes=num_classes)
-    ckpt = torch.load(weight_path, map_location="cpu")
+    # PyTorch 2.6+ 호환: weights_only=False 명시 (신뢰할 수 있는 소스에서만 사용)
+    ckpt = torch.load(weight_path, map_location="cpu", weights_only=False)
     state = ckpt.get("model", ckpt)
     missing, unexpected = model.load_state_dict(state, strict=False)
     if missing:

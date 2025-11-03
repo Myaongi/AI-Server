@@ -45,6 +45,8 @@ Dockerfile.v*
 # Not needed datasets or notebooks
 **/*.ipynb
 **/*.csv
+# Exception: Keep ko_mapping.csv files needed at runtime
+!app/**/ko_mapping.csv
 # Keep yolov8s.pt (needed at runtime)
 # data/
 

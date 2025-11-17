@@ -131,7 +131,7 @@ def _square_pad_crop_from_xyxy(
     cx, cy = (x1+x2)/2.0, (y1+y2)/2.0
     side   = max(x2-x1, y2-y1)
     side_p = side * (1.0 + 2.0*pad_ratio)
-    S      = int(max(1, round(side_p)))
+    S      = int(max(1, math.ceil(side_p)))
 
     half = side_p / 2.0
     x1p, y1p, x2p, y2p = cx-half, cy-half, cx+half, cy+half
@@ -159,8 +159,32 @@ def _square_pad_crop_from_xyxy(
     h, w = arr.shape[:2]
     need_w = S - (pad_left + w + pad_right)
     need_h = S - (pad_top + h + pad_bottom)
-    if need_w != 0:  pad_right  += need_w
-    if need_h != 0:  pad_bottom += need_h
+    if need_w > 0:
+        pad_right += need_w
+    elif need_w < 0:
+        deficit = -need_w
+        take = min(pad_right, deficit)
+        pad_right -= take
+        deficit -= take
+        if deficit > 0:
+            take = min(pad_left, deficit)
+            pad_left -= take
+            deficit -= take
+        if deficit > 0:
+            S += deficit
+    if need_h > 0:
+        pad_bottom += need_h
+    elif need_h < 0:
+        deficit = -need_h
+        take = min(pad_bottom, deficit)
+        pad_bottom -= take
+        deficit -= take
+        if deficit > 0:
+            take = min(pad_top, deficit)
+            pad_top -= take
+            deficit -= take
+        if deficit > 0:
+            S += deficit
 
     mode = pad_mode if pad_mode in ("edge", "reflect") else "edge"
     pad_width = ((pad_top, pad_bottom), (pad_left, pad_right), (0, 0))

@@ -4,7 +4,7 @@ import numpy as np
 from io import BytesIO
 from PIL import Image, ImageOps
 
-from .llm_client import normalize_to_3_sentences  # 품종/색/특징 → 문장 3개
+from .llm_opt import normalize_to_3_sentences  # 품종/색/특징 → 문장 3개
 from .yolo_crop import yolo_crop                  # YOLO 크롭 (마진 포함, DOG_CLASS_ID=16)
 from .clipper import CLIPper                      # CLIP 임베딩 (이미지/텍스트 + 정규화)
 from ...domain import config

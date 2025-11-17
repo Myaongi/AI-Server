@@ -1,6 +1,6 @@
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Body
 from . import schema
-from .llm_client import normalize_to_3_sentences
+from .llm_opt import normalize_to_3_sentences  # Vertex AI 버전 사용
 from .pipeline_embed import build_embeddings
 import logging
 

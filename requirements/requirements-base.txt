@@ -13,3 +13,5 @@ pydantic>=2.7
 # CLIP 및 LLM 관련
 open_clip_torch>=2.20.0
 requests>=2.31.0
+google-auth>=2.30.0
+google-cloud-aiplatform>=1.0.0
